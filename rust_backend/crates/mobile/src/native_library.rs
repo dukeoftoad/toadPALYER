@@ -143,22 +143,13 @@ pub(crate) fn execute(request: &Value, check: Check<'_>) -> Result<Value, String
 /// The existing native scanner's delta stays native through ingestion. The
 /// platform SAF adapter uses library_incremental_import with its native delta.
 pub(crate) fn scan_incremental(
-    manager: &ExtensionManager,
-    request: &Value,
-    check: &(dyn Fn() -> Result<(), String> + Sync),
+    _manager: &ExtensionManager,
+    _request: &Value,
+    _check: &(dyn Fn() -> Result<(), String> + Sync),
 ) -> Result<Value, String> {
-    let delta = manager
-        .inner
-        .scan_library_folder_incremental_from_snapshot(
-            required(request, "folder_path")?,
-            required(request, "snapshot_path")?,
-            check,
-        )?;
-    check()?;
-    if delta["cancelled"] == true {
-        return Err("Library scan cancelled".into());
-    }
-    import(request, Some(&delta), check)
+    // The extension runtime (and with it the snapshot-driven incremental
+    // scanner) was removed with the extensions feature of the full product.
+    Err("Incremental library scan is unavailable in this build".into())
 }
 
 pub(crate) fn normalized(value: &str) -> String {
