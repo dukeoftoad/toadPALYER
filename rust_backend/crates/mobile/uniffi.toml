@@ -1,0 +1,7 @@
+[bindings.kotlin]
+package_name = "com.toadplayer.backend"
+cdylib_name = "toadplayer_mobile"
+
+[bindings.swift]
+module_name = "ToadplayerBackend"
+ffi_module_name = "ToadplayerBackendFFI"
