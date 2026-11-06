@@ -17,6 +17,7 @@ publish = false
 
 [workspace.dependencies]
 image = { version = "=0.25.10", default-features = false, features = ["jpeg", "png", "gif", "webp"] }
+rcgen = "0.14.10"
 toadplayer-core = { path = "crates/core" }
 toadplayer-network = { path = "crates/network" }
 toadplayer-cast = { path = "crates/cast" }
