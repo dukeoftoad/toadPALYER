@@ -9,7 +9,6 @@ import 'package:toadplayer/l10n/supported_locales.dart';
 import 'package:toadplayer/providers/equalizer_provider.dart';
 import 'package:toadplayer/providers/music_player_provider.dart';
 import 'package:toadplayer/providers/settings_provider.dart';
-import 'package:toadplayer/routes/now_playing_route.dart';
 import 'package:toadplayer/screens/equalizer_screen.dart';
 import 'package:toadplayer/screens/now_playing_screen.dart';
 import 'package:toadplayer/screens/settings/lyrics_settings_page.dart';
@@ -42,7 +41,6 @@ class ToadplayerPlayerApp extends ConsumerWidget {
           title: 'Toadplayer Music Player',
           debugShowCheckedModeBanner: false,
           navigatorKey: playerRootNavigatorKey,
-          scaffoldMessengerKey: rootScaffoldMessengerKey,
           theme: theme,
           darkTheme: darkTheme,
           themeMode: themeMode,
@@ -59,10 +57,12 @@ class ToadplayerPlayerApp extends ConsumerWidget {
                 requestedLocale ?? locale,
                 supportedLocales,
               ),
-          builder: (context, child) => ToadplayerGlassPreparation(
-            child: AndroidKeyboardLifecycle(
-              child: PlaybackFeedbackListener(
-                child: child ?? const SizedBox.shrink(),
+          builder: (context, child) => AppScaffoldMessenger(
+            child: ToadplayerGlassPreparation(
+              child: AndroidKeyboardLifecycle(
+                child: PlaybackFeedback(
+                  child: child ?? const SizedBox.shrink(),
+                ),
               ),
             ),
           ),
@@ -79,7 +79,7 @@ class StandalonePlayerHomeScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final mediaItem = ref.watch(currentMediaItemProvider).value;
-    final queue = ref.watch(playbackQueueProvider).value ?? const <MediaItem>[];
+    final queue = ref.watch(playQueueProvider).value ?? const <MediaItem>[];
     final openingAudio = ref.watch(openAudioControllerProvider);
     final controller = ref.read(musicPlayerControllerProvider);
 
@@ -95,7 +95,7 @@ class StandalonePlayerHomeScreen extends ConsumerWidget {
             ),
           ),
           IconButton(
-            tooltip: context.l10n.settingsLyricsTitle,
+            tooltip: context.l10n.settingsLyrics,
             icon: const Icon(Icons.lyrics_outlined),
             onPressed: () => Navigator.of(context).push(
               MaterialPageRoute<void>(
@@ -104,7 +104,7 @@ class StandalonePlayerHomeScreen extends ConsumerWidget {
             ),
           ),
           IconButton(
-            tooltip: context.l10n.settingsPlaybackTitle,
+            tooltip: context.l10n.libraryPlayback,
             icon: const Icon(Icons.tune),
             onPressed: () => Navigator.of(context).push(
               MaterialPageRoute<void>(
@@ -150,7 +150,10 @@ class StandalonePlayerHomeScreen extends ConsumerWidget {
                   ),
                 if (queue.isNotEmpty)
                   OutlinedButton.icon(
-                    onPressed: () => showPlayerQueueSheet(context),
+                    onPressed: () => showPlayerQueueSheet(
+                      context,
+                      Theme.of(context).colorScheme,
+                    ),
                     icon: const Icon(Icons.queue_music),
                     label: Text('Queue (${queue.length})'),
                   ),
@@ -189,21 +192,12 @@ class StandalonePlayerHomeScreen extends ConsumerWidget {
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
-                        onTap: () => controller.skipToQueueItem(index),
+                        onTap: () => controller.jumpTo(index),
                       );
                     },
                   ),
           ),
-          if (isDesktopPlatform)
-            DesktopPlayerBar(
-              onOpenNowPlaying: (page) => Navigator.of(context).push(
-                NowPlayingRoute(
-                  child: NowPlayingScreen(initialPage: page),
-                ),
-              ),
-            )
-          else
-            const MiniPlayer(),
+          if (isDesktopPlatform) DesktopPlayerBar() else const MiniPlayer(),
         ],
       ),
     );

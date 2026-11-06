@@ -28,6 +28,8 @@ class LastfmService extends ChangeNotifier {
 
   Future<void> initialize() async {}
 
+  Future<void> close() async {}
+
   void bind(
     AudioHandler? handler, {
     String Function()? unknownTitle,

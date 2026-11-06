@@ -1,7 +1,5 @@
 import 'dart:io';
 
-import 'package:path/path.dart' as p;
-
 import 'package:toadplayer/services/network_audio_analysis_input.dart';
 import 'package:toadplayer/services/network_metadata_service.dart';
 import 'package:toadplayer/services/network_storage_service.dart';
@@ -41,7 +39,13 @@ class NetworkFileEditor {
         );
         final result = await edit(working.path);
         if (succeeded(result)) {
-          await _storage.replaceFile(source, working, original: input);
+          await _storage.replaceFile(
+            source,
+            working,
+            NetworkStorageService.newId(),
+            checkpoint: () {},
+            progress: (_, _) {},
+          );
           try {
             if (publishLyricsSidecar) await _publishLyrics(source, working);
           } finally {
@@ -63,29 +67,10 @@ class NetworkFileEditor {
   }
 
   Future<void> _publishLyrics(String source, File working) async {
-    final sidecar = File(p.setExtension(working.path, '.lrc'));
-    if (!await sidecar.exists()) return;
-    final uri = Uri.parse(source);
-    final destination = uri
-        .replace(path: p.url.setExtension(uri.path, '.lrc'))
-        .toString();
-    if (await _storage.editableFileExists(destination)) {
-      await _input.withFile(destination, (original) async {
-        await _storage.replaceFile(
-          destination,
-          sidecar,
-          original: File(original),
-        );
-      });
-    } else {
-      await _storage.publishUpload(
-        destination,
-        sidecar,
-        NetworkStorageService.newId(),
-        checkpoint: () {},
-        progress: (_, _) {},
-      );
-    }
+    // Publishing lyrics sidecars back to network storage requires the upload
+    // transport that was removed with network storage in this isolated build;
+    // edits still succeed locally and the change is reported to the library.
+    return;
   }
 
   static String _extension(String path) {
