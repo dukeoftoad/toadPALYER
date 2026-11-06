@@ -28,21 +28,19 @@ jobs:
           distribution: temurin
           java-version: '25'
 
-      - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
-
       - name: Install Android SDK components
         run: |
           set -euo pipefail
-          yes | sdkmanager --licenses > /dev/null || true
-          sdkmanager --install "platform-tools" "platforms;android-37" "ndk;30.0.16248370"
+          SDKM="$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
+          yes | "$SDKM" --licenses > /dev/null || true
+          "$SDKM" --install "platform-tools" "platforms;android-37" "ndk;30.0.16248370"
           # Prefer the pinned CMake; fall back to the newest available 4.x.
-          if ! sdkmanager --install "cmake;4.1.2" > /dev/null 2>&1; then
-            NEWEST="$(sdkmanager --list 2>/dev/null | grep -oE 'cmake;4\.[0-9]+\.[0-9]+' | sort -uV | tail -1 | cut -d';' -f2 || true)"
+          if ! "$SDKM" --install "cmake;4.1.2" > /dev/null 2>&1; then
+            NEWEST="$("$SDKM" --list 2>/dev/null | grep -oE 'cmake;4\.[0-9]+\.[0-9]+' | sort -uV | tail -1 | cut -d';' -f2 || true)"
             if [ -n "$NEWEST" ]; then
               echo "Pinned cmake;4.1.2 unavailable, using $NEWEST"
               echo "TOADPLAYER_CMAKE_VERSION=$NEWEST" >> "$GITHUB_ENV"
-              sdkmanager --install "cmake;$NEWEST"
+              "$SDKM" --install "cmake;$NEWEST"
             else
               echo "::error::No cmake 4.x available from sdkmanager"
               exit 1
